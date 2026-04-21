@@ -20,6 +20,21 @@ public class EndPointBlankConfig {
             config.setLogBaseUrl("http://localhost:4001");
             config.setClientId("+CBpwN+gM3ConbxjWkRv3UWEtDS+7PN3");
             config.setClientSecret("WR6OipzSTZ4bktUpDzxuIH1TEegEEP5rR060v7pBnweAT6xMDb4ls4ahRs8gRZO+");
+            config.setAppName("epb-test-java");
+            config.setApplicationVersion(resolveGitCommit());
         });
+    }
+
+    private static String resolveGitCommit() {
+        String envCommit = System.getenv("GIT_COMMIT");
+        if (envCommit != null && !envCommit.isEmpty()) {
+            return envCommit;
+        }
+        try {
+            Process process = Runtime.getRuntime().exec("git rev-parse HEAD");
+            return new String(process.getInputStream().readAllBytes()).trim();
+        } catch (Exception e) {
+            return "0";
+        }
     }
 }

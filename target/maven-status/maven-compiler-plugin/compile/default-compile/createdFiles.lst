@@ -1,8 +1,13 @@
-com/ejbtestjava/controller/ErrorsController.class
+com/ejbtestjava/model/Computer.class
 com/ejbtestjava/model/Teacher.class
 com/ejbtestjava/controller/TeachersController.class
-com/ejbtestjava/config/EndPointBlankConfig.class
 com/ejbtestjava/model/Student.class
 com/ejbtestjava/EjbTestJavaApplication.class
-com/ejbtestjava/controller/GlobalExceptionHandler.class
 com/ejbtestjava/controller/StudentsController.class
+com/ejbtestjava/controller/ErrorsController.class
+com/ejbtestjava/controller/TabletsController.class
+com/ejbtestjava/controller/ComputersController.class
+com/ejbtestjava/model/Tablet.class
+com/ejbtestjava/config/EndPointBlankConfig.class
+com/ejbtestjava/controller/GlobalExceptionHandler.class
+com/ejbtestjava/config/EndPointBlankStartup.class

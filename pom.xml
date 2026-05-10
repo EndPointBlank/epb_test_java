@@ -27,10 +27,10 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- EndPointBlank Java library (installed locally via mvn install) -->
+        <!-- EndPointBlank Java library (via JitPack) -->
         <dependency>
-            <groupId>com.endpointblank</groupId>
-            <artifactId>end-point-blank-java</artifactId>
+            <groupId>com.github.EndPointBlank</groupId>
+            <artifactId>end_point_blank_java</artifactId>
             <version>0.1.0</version>
         </dependency>
 
@@ -41,6 +41,13 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>

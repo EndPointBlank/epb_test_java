@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
 set -e
 cd "$(dirname "$0")"
-mvn spring-boot:run
+
+if ! command -v java &> /dev/null; then
+    source "$HOME/.sdkman/bin/sdkman-init.sh"
+    export JAVA_HOME="$HOME/.sdkman/candidates/java/current"
+    export PATH="$JAVA_HOME/bin:$PATH"
+fi
+
+java -jar target/ejb-test-java-0.1.0.jar

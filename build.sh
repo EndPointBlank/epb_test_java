@@ -3,12 +3,14 @@ set -o errexit
 
 cd "$(dirname "$0")"
 
-if [ ! -d "$HOME/.sdkman" ]; then
-    curl -s "https://get.sdkman.io" | bash
+if [ ! -d "jdk" ]; then
+    curl -L "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.7%2B6/OpenJDK21U-jdk_x64_linux_hotspot_21.0.7_6.tar.gz" -o jdk.tar.gz
+    mkdir -p jdk
+    tar -xzf jdk.tar.gz -C jdk --strip-components=1
+    rm jdk.tar.gz
 fi
-source "$HOME/.sdkman/bin/sdkman-init.sh"
-sdk install java 21.0.7-tem 2>/dev/null || true
-export JAVA_HOME="$HOME/.sdkman/candidates/java/current"
+
+export JAVA_HOME="$(pwd)/jdk"
 export PATH="$JAVA_HOME/bin:$PATH"
 
 ./mvnw clean package -DskipTests

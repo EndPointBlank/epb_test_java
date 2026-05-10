@@ -27,10 +27,10 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- EndPointBlank Java library (via JitPack) -->
+        <!-- EndPointBlank Java library (vendored in lib/) -->
         <dependency>
-            <groupId>com.github.EndPointBlank</groupId>
-            <artifactId>end_point_blank_java</artifactId>
+            <groupId>com.endpointblank</groupId>
+            <artifactId>end-point-blank-java</artifactId>
             <version>0.1.0</version>
         </dependency>
 
@@ -44,8 +44,8 @@
 
     <repositories>
         <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <id>local-lib</id>
+            <url>file://${project.basedir}/lib</url>
         </repository>
     </repositories>
 

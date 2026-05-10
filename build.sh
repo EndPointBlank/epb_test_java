@@ -3,4 +3,4 @@ set -o errexit
 
 cd "$(dirname "$0")"
 
-mvn clean package -DskipTests
+./mvnw clean package -DskipTests

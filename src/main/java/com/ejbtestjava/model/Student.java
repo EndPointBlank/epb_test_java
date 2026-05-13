@@ -1,18 +1,30 @@
 package com.ejbtestjava.model;
 
-/**
- * Simple student record returned by {@code GET /students}.
- */
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "students")
 public class Student {
 
-    private final String name;
-    private final String num;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+    private String num;
+
+    public Student() {}
 
     public Student(String name, String num) {
         this.name = name;
         this.num = num;
     }
 
+    public Long getId()     { return id; }
     public String getName() { return name; }
     public String getNum()  { return num; }
+
+    public void setId(Long id)         { this.id = id; }
+    public void setName(String name)   { this.name = name; }
+    public void setNum(String num)     { this.num = num; }
 }

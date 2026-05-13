@@ -19,8 +19,8 @@ public class EndPointBlankConfig {
             String intakeUrl = System.getenv().getOrDefault("INTAKE_API_URL", "http://localhost:4001");
             config.setBaseUrl(intakeUrl);
             config.setLogBaseUrl(intakeUrl);
-            config.setClientId("YOScUN1M9eFWawcMN14gfu/6d0y6RlvG");
-            config.setClientSecret("up3udV3drFAnjhcqUxDI0BXJ+Hr6Hd6wHwuZcQNXXpFj6RNkmTNH87E3QrH4OYrD");
+            config.setClientId("Sb3JaVaXd8EvPmQnLuTwFc4YjHgNvOq");
+            config.setClientSecret("wI4pQmZ7dN3sMkR2tD6bXeJiW0aFzGoBMaVnQkDpEyHwIlZcSxrUfOgtXu9P1J8");
             config.setAppName("epb-test-java");
             config.setApplicationVersion(resolveGitCommit());
         });

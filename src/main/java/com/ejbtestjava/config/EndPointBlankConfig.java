@@ -16,10 +16,11 @@ public class EndPointBlankConfig {
     @PostConstruct
     public void configure() {
         EndPointBlank.configure(config -> {
-            config.setBaseUrl("http://localhost:4001");
-            config.setLogBaseUrl("http://localhost:4001");
-            config.setClientId("+CBpwN+gM3ConbxjWkRv3UWEtDS+7PN3");
-            config.setClientSecret("WR6OipzSTZ4bktUpDzxuIH1TEegEEP5rR060v7pBnweAT6xMDb4ls4ahRs8gRZO+");
+            String intakeUrl = System.getenv().getOrDefault("INTAKE_API_URL", "http://localhost:4001");
+            config.setBaseUrl(intakeUrl);
+            config.setLogBaseUrl(intakeUrl);
+            config.setClientId("YOScUN1M9eFWawcMN14gfu/6d0y6RlvG");
+            config.setClientSecret("up3udV3drFAnjhcqUxDI0BXJ+Hr6Hd6wHwuZcQNXXpFj6RNkmTNH87E3QrH4OYrD");
             config.setAppName("epb-test-java");
             config.setApplicationVersion(resolveGitCommit());
         });

@@ -13,4 +13,13 @@ fi
 export JAVA_HOME="$(pwd)/jdk"
 export PATH="$JAVA_HOME/bin:$PATH"
 
+# Install the vendored JAR into the local Maven repo so it overrides any cached version.
+./mvnw install:install-file \
+  -Dfile="lib/com/endpointblank/end-point-blank-java/0.1.0/end-point-blank-java-0.1.0.jar" \
+  -DgroupId=com.endpointblank \
+  -DartifactId=end-point-blank-java \
+  -Dversion=0.1.0 \
+  -Dpackaging=jar \
+  -q
+
 ./mvnw clean package -DskipTests

@@ -34,9 +34,19 @@ public class DataSourceConfig {
                 throw new RuntimeException("Invalid DATABASE_URL: " + e.getMessage(), e);
             }
         } else {
+            // Local development fallback. Without an explicit username the JDBC
+            // driver falls back to the OS user, which usually isn't a Postgres
+            // role — match the repo's local convention of postgres/postgres.
             config.setJdbcUrl("jdbc:postgresql://localhost:5432/ejb_test_java_development");
+            config.setUsername(envOrDefault("DB_USER", "postgres"));
+            config.setPassword(envOrDefault("DB_PASSWORD", "postgres"));
         }
 
         return new HikariDataSource(config);
+    }
+
+    private static String envOrDefault(String key, String fallback) {
+        String value = System.getenv(key);
+        return (value == null || value.isEmpty()) ? fallback : value;
     }
 }

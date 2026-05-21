@@ -2,7 +2,11 @@
 set -e
 cd "$(dirname "$0")"
 
-export JAVA_HOME="$(pwd)/jdk"
-export PATH="$JAVA_HOME/bin:$PATH"
+# The vendored ./jdk is a Linux build (used on Render). On macOS / non-Linux
+# hosts it can't execute, so fall back to whatever `java` is on PATH.
+if [ "$(uname -s)" = "Linux" ] && [ -x "$(pwd)/jdk/bin/java" ]; then
+  export JAVA_HOME="$(pwd)/jdk"
+  export PATH="$JAVA_HOME/bin:$PATH"
+fi
 
 java -jar target/ejb-test-java-0.1.0.jar

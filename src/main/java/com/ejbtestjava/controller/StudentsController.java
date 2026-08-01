@@ -23,7 +23,7 @@ public class StudentsController {
     }
 
     @GetMapping
-    @Versioned(versions = {"1"}, state = "Current")
+    @Versioned(versions = {"1"})
     public ResponseEntity<Map<String, Object>> index() {
         LogWriter.info("Fetching students list");
         return ResponseEntity.ok(Map.of("students", studentRepository.findAll()));

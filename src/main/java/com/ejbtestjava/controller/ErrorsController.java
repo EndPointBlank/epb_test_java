@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ErrorsController {
 
     @GetMapping
-    @Versioned(versions = {"1"}, state = "Current")
+    @Versioned(versions = {"1"})
     public void index() {
         throw new RuntimeException("This is a test error for error tracking.");
     }

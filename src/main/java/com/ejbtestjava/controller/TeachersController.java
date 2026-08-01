@@ -21,16 +21,14 @@ public class TeachersController {
     }
 
     @GetMapping
-    @Versioned(versions = {"1"}, state = "Current")
-    @Versioned(versions = {"2"}, state = "In Development")
+    @Versioned(versions = {"1", "2"})
     public ResponseEntity<Map<String, Object>> index() {
         LogWriter.info("Fetching teachers list");
         return ResponseEntity.ok(Map.of("teachers", teacherRepository.findAll()));
     }
 
     @GetMapping("/{id}")
-    @Versioned(versions = {"1"}, state = "Current")
-    @Versioned(versions = {"2"}, state = "In Development")
+    @Versioned(versions = {"1", "2"})
     public ResponseEntity<?> show(@PathVariable Long id) {
         return teacherRepository.findById(id)
                 .map(ResponseEntity::ok)

@@ -22,14 +22,14 @@ public class TabletsController {
     }
 
     @GetMapping
-    @Versioned(versions = {"1"}, state = "Current")
+    @Versioned(versions = {"1"})
     public ResponseEntity<Map<String, Object>> index() {
         LogWriter.info("Fetching tablets list");
         return ResponseEntity.ok(Map.of("tablets", tabletRepository.findAll()));
     }
 
     @PostMapping
-    @Versioned(versions = {"1"}, state = "Current")
+    @Versioned(versions = {"1"})
     public ResponseEntity<?> create(@RequestBody Map<String, Object> body) {
         String description = (String) body.get("description");
         String brand       = (String) body.get("brand");
@@ -51,7 +51,7 @@ public class TabletsController {
     }
 
     @DeleteMapping("/{id}")
-    @Versioned(versions = {"1"}, state = "Current")
+    @Versioned(versions = {"1"})
     public ResponseEntity<?> destroy(@PathVariable Long id) {
         if (!tabletRepository.existsById(id)) {
             return ResponseEntity.status(404).body(Map.of("error", "Tablet not found"));

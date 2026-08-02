@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    # This repository's default branch is master, not main.
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      # build.sh downloads and uses its own Temurin 21 on Linux, because that is
+      # what Render does. Caching it keeps this job from re-fetching ~200MB per
+      # run while still exercising the same code path Render takes.
+      - name: Cache the vendored JDK
+        uses: actions/cache@v4
+        with:
+          path: jdk
+          key: temurin-21.0.7
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ hashFiles('pom.xml') }}
+          restore-keys: maven-
+
+      # Runs build.sh rather than mvn directly, deliberately: the SDK is not on
+      # Maven Central at the pinned version, so build.sh vendors the jar from
+      # lib/ and installs it. Bumping pom.xml without re-vendoring breaks every
+      # machine that does not already have the artifact cached — exactly the
+      # failure this job exists to catch.
+      - name: Build against the current SDK
+        run: ./build.sh

@@ -27,7 +27,14 @@ if [ -z "$DATABASE_URL" ]; then
         ejb_test_java_development 2>/dev/null || true
 fi
 
-LIB_JAR_DEST="lib/com/endpointblank/end-point-blank-java/0.1.0/end-point-blank-java-0.1.0.jar"
+# Must match the end-point-blank-java version in pom.xml. The SDK is not on
+# Maven Central at this version (0.2.2 is the newest published), so the jar is
+# vendored under lib/ and resolved from the local-lib repository. Bumping the
+# pom without bumping this and re-vendoring the jar breaks every build that
+# does not already have the artifact in ~/.m2 — which means CI and Render,
+# but not the machine that did the bump.
+LIB_VERSION="0.3.0"
+LIB_JAR_DEST="lib/com/endpointblank/end-point-blank-java/${LIB_VERSION}/end-point-blank-java-${LIB_VERSION}.jar"
 
 # Local dev only: if the end_point_blank_java source repo is checked out
 # next to this one, rebuild the jar from master and refresh the vendored
@@ -35,7 +42,7 @@ LIB_JAR_DEST="lib/com/endpointblank/end-point-blank-java/0.1.0/end-point-blank-j
 LIB_SRC="../end_point_blank_java"
 if [ -d "$LIB_SRC" ]; then
     (cd "$LIB_SRC" && mvn package -DskipTests -q)
-    cp "$LIB_SRC/target/end-point-blank-java-0.1.0.jar" "$LIB_JAR_DEST"
+    cp "$LIB_SRC/target/end-point-blank-java-${LIB_VERSION}.jar" "$LIB_JAR_DEST"
 fi
 
 # Install the vendored JAR into the local Maven repo so it overrides any cached version.
@@ -43,7 +50,7 @@ fi
   -Dfile="$LIB_JAR_DEST" \
   -DgroupId=com.endpointblank \
   -DartifactId=end-point-blank-java \
-  -Dversion=0.1.0 \
+  -Dversion="${LIB_VERSION}" \
   -Dpackaging=jar \
   -q
 

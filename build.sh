@@ -33,7 +33,7 @@ fi
 # pom without bumping this and re-vendoring the jar breaks every build that
 # does not already have the artifact in ~/.m2 — which means CI and Render,
 # but not the machine that did the bump.
-LIB_VERSION="0.3.0"
+LIB_VERSION="0.6.0"
 LIB_JAR_DEST="lib/com/endpointblank/end-point-blank-java/${LIB_VERSION}/end-point-blank-java-${LIB_VERSION}.jar"
 
 # Local dev only: if the end_point_blank_java source repo is checked out

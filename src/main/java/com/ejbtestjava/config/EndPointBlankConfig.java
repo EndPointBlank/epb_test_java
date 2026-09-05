@@ -19,8 +19,10 @@ public class EndPointBlankConfig {
             String intakeUrl = System.getenv().getOrDefault("INTAKE_API_URL", "http://localhost:4001");
             config.setBaseUrl(intakeUrl);
             config.setLogBaseUrl(intakeUrl);
-            config.setClientId("Sb3JaVaXd8EvPmQnLuTwFc4YjHgNvOq");
-            config.setClientSecret("wI4pQmZ7dN3sMkR2tD6bXeJiW0aFzGoBMaVnQkDpEyHwIlZcSxrUfOgtXu9P1J8");
+            // Staging regenerates these on every stand-up (Terraform random_password), so the
+            // hardcoded literals only work for local dev against seeded credentials.
+            config.setClientId(System.getenv().getOrDefault("EPB_CLIENT_ID", "Sb3JaVaXd8EvPmQnLuTwFc4YjHgNvOq"));
+            config.setClientSecret(System.getenv().getOrDefault("EPB_CLIENT_SECRET", "wI4pQmZ7dN3sMkR2tD6bXeJiW0aFzGoBMaVnQkDpEyHwIlZcSxrUfOgtXu9P1J8"));
             config.setAppName("epb-test-java");
             config.setApplicationVersion(resolveGitCommit());
         });

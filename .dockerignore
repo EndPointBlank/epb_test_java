@@ -1,0 +1,9 @@
+target/
+jdk/
+.git
+.github
+.zencoder
+.zenflow
+*.class
+*.jar.original
+.DS_Store

@@ -1,5 +1,12 @@
 target/
 *.class
 *.jar
+# ...but the vendored SDK jar under lib/ is a build input, not a build output.
+# CI and Render have no sibling SDK checkout and resolve it straight from here,
+# so if it is not committed the image builds against nothing. It only ever got
+# in via `git add -f`, which is a step the next person to bump the version has
+# no reason to know about -- and the failure is a broken deploy, not a broken
+# commit.
+!lib/**/*.jar
 jdk/
 .DS_Store

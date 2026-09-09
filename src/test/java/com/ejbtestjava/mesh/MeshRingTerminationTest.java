@@ -1,6 +1,5 @@
 package com.ejbtestjava.mesh;
 
-import com.ejbtestjava.controller.MeshController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,10 +8,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,12 +20,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 /**
  * The termination proof.
  *
- * <p>sc-263's ring is five applications that each call the next, and this class
- * stands the whole ring up in one JVM: five copies of this application's own
- * relay logic, wired to each other by a double that dispatches into the next
- * node's MockMvc instead of over the network. No staging, no AWS, no intake, no
- * app_portal and no peers — if this needed any of those, the implementation
- * would have bound itself to something it should not have.
+ * <p>sc-263's ring is five applications that each call the next, and
+ * {@link MeshRing} stands the whole thing up in one JVM. No staging, no AWS, no
+ * intake, no app_portal and no peers — if this needed any of those, the
+ * implementation would have bound itself to something it should not have.
  *
  * <p>An entry request with budget N must produce exactly N downstream calls and
  * touch N+1 applications, whatever N is, including when N wraps the ring more
@@ -38,74 +32,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 class MeshRingTerminationTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final int RING_SIZE = 5;
 
-    /**
-     * The double the whole proof rests on: it counts every call and routes it to
-     * the next node in the ring by base URL. A node that made two downstream
-     * calls, or none when it owed one, shows up here as a count that is not N.
-     */
-    private static final class Ring implements MeshDownstream {
-
-        private final Map<String, MockMvc> nodes = new LinkedHashMap<>();
-        private final List<String> calls = new ArrayList<>();
-
-        void add(String baseUrl, MockMvc node) {
-            nodes.put(baseUrl, node);
-        }
-
-        int callCount() {
-            return calls.size();
-        }
-
-        List<String> calls() {
-            return calls;
-        }
-
-        @Override
-        public MeshDownstreamResult call(String url, int hops, String run, Object payload) {
-            calls.add(url + " hops=" + hops);
-
-            String base = nodes.keySet().stream()
-                    .filter(url::startsWith)
-                    .findFirst()
-                    .orElseThrow(() -> new AssertionError("no ring node for " + url));
-
-            try {
-                var request = post(url.substring(base.length()))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(MAPPER.writeValueAsString(Map.of("payload", payload == null ? "" : payload)))
-                        .header(HopBudget.HOPS_HEADER, String.valueOf(hops));
-                if (run != null) {
-                    request = request.header(HopBudget.RUN_HEADER, run);
-                }
-                MvcResult result = nodes.get(base).perform(request).andReturn();
-                return MeshDownstreamResult.of(result.getResponse().getStatus(),
-                        result.getResponse().getContentAsString());
-            } catch (Exception e) {
-                return MeshDownstreamResult.failed(e.toString());
-            }
-        }
-    }
-
-    private Ring ring;
+    private MeshRing ring;
     private MockMvc entry;
 
     private void standUpRing() {
-        ring = new Ring();
-        List<MockMvc> nodes = new ArrayList<>();
-        for (int i = 0; i < RING_SIZE; i++) {
-            // Node i calls node i+1, and the last one calls node 0 — a real ring,
-            // so a budget larger than the ring wraps instead of falling off the end.
-            String next = "https://node-" + ((i + 1) % RING_SIZE);
-            MeshRelayService service =
-                    new MeshRelayService(new MeshConfig(next, "epb_test_node_" + i), ring);
-            nodes.add(MockMvcBuilders.standaloneSetup(new MeshController(service)).build());
-        }
-        for (int i = 0; i < RING_SIZE; i++) {
-            ring.add("https://node-" + i, nodes.get(i));
-        }
-        entry = nodes.get(0);
+        ring = MeshRing.standUp();
+        entry = ring.entry();
     }
 
     private MvcResult enter(int budget) throws Exception {

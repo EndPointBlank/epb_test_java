@@ -37,3 +37,18 @@ jobs:
       # failure this job exists to catch.
       - name: Build against the current SDK
         run: ./build.sh
+
+      # build.sh packages with -DskipTests, and so does the Dockerfile, so
+      # without this step the suite would exist and never run anywhere. It uses
+      # the JDK build.sh just fetched: the runner's default JAVA_HOME is not
+      # necessarily 21, and this project compiles with --release 21.
+      #
+      # No services are needed. The mesh tests stand the whole ring up in one
+      # JVM against in-process doubles — no database, no intake, no staging.
+      - name: Run the test suite
+        run: |
+          if [ -x "$PWD/jdk/bin/java" ]; then
+            export JAVA_HOME="$PWD/jdk"
+            export PATH="$JAVA_HOME/bin:$PATH"
+          fi
+          ./mvnw test

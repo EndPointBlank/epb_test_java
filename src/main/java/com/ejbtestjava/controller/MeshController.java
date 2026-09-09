@@ -54,8 +54,11 @@ public class MeshController {
             return relayService.invalidBody(e.getMessage());
         }
 
-        // getHeader returns the first value, which is the one the contract wants
-        // when the header repeats.
+        // getHeader returns element 0 when the header repeats, which is the
+        // value the contract starts from; HopBudget.parse then takes what comes
+        // before the first comma of it, so a folded "4, 8" is still 4. The run
+        // id gets element 0 and nothing else: it may legitimately contain a
+        // comma, and "forwarded verbatim" outranks the split.
         return relayService.relay(
                 path,
                 request.getHeader(HopBudget.HOPS_HEADER),

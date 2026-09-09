@@ -8,7 +8,14 @@ import java.util.Map;
  */
 public final class MeshConfig {
 
-    /** Base URL of the next application in the ring. The relay path is appended by the caller. */
+    /**
+     * Base URL of the next application in the ring. <b>The path the request
+     * arrived on</b> is appended by the caller — not a constant relay path.
+     * {@link #downstreamUrlFor(String)} already does this; the wording is
+     * corrected here because the contract's older "the relay path is appended"
+     * sentence is what led the JavaScript and Rails implementations to forward
+     * {@code /mesh/reports} to the downstream {@code /mesh/relay}.
+     */
     public static final String DOWNSTREAM_URL_VARIABLE = "EPB_MESH_DOWNSTREAM_URL";
 
     /** This application's name for the {@code app} field. */

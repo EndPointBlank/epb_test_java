@@ -49,17 +49,33 @@ public final class HopBudget {
     /**
      * Parses a raw header value into a budget.
      *
+     * <p>The value before the first comma is taken first, and only then are the
+     * rules above applied to it, so {@code "4, 8"} is 4 and {@code "abc,4"} is
+     * 0. That is not cosmetic: PEP 3333 lets a WSGI server fold repeated
+     * headers into one comma-separated value, and waitress — which
+     * {@code epb_test_py} runs under — does, so by the time the framework
+     * exposes the header the separate values no longer exist. An
+     * implementation that can still see them must behave as if they had been
+     * folded, or the five applications diverge on a case the load driver can
+     * produce. Rejecting the whole value would be a <b>silent stop</b>: a
+     * budget of 0 terminates the chain early and reads as an unexplainable
+     * short run rather than as a parse bug.
+     *
+     * <p>Where repeated headers are visible as a list — {@code getHeader} on a
+     * servlet request returns element 0 — the caller hands over element 0 and
+     * this method applies the comma rule to it.
+     *
      * @param headerValue the first {@code X-EPB-Test-Hops} value, or null when absent
      * @return the budget: 0 for absent, empty, whitespace-only, non-numeric,
-     *         signed, negative and zero values; otherwise the value, clamped to
-     *         {@link #MAX_HOPS}
+     *         signed, negative and zero values; otherwise the value before the
+     *         first comma, clamped to {@link #MAX_HOPS}
      */
     public static int parse(String headerValue) {
         if (headerValue == null) {
             return 0;
         }
 
-        String value = trimAsciiWhitespace(headerValue);
+        String value = trimAsciiWhitespace(beforeFirstComma(headerValue));
         if (value.isEmpty()) {
             return 0;
         }
@@ -80,6 +96,25 @@ public final class HopBudget {
         }
 
         return (int) Math.min(budget, MAX_HOPS);
+    }
+
+    /**
+     * Everything up to the first comma, or the whole value when there is none.
+     *
+     * <p>Deliberately not {@code String.split(",")}: that discards trailing
+     * empty fields, so {@code "4,".split(",")} is a one-element array and
+     * {@code ",".split(",")} is an <i>empty</i> one, whose element 0 does not
+     * exist. Both must reach the digit check as {@code "4"} and {@code ""}.
+     *
+     * <p>{@code comma < 0} and {@code comma <= 0} are indistinguishable here,
+     * so a mutation between them survives: when the comma is at index 0 the
+     * whole value still starts with a comma, the ASCII trim cannot remove one,
+     * and the digit check rejects it. Both answer 0. Noted so the next reader
+     * running a mutation pass does not go looking for the missing test.
+     */
+    private static String beforeFirstComma(String value) {
+        int comma = value.indexOf(',');
+        return comma < 0 ? value : value.substring(0, comma);
     }
 
     /** Trims ASCII whitespace only, so {@code " 4 "} is 4 but a no-break space is not. */

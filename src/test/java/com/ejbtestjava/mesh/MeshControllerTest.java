@@ -6,6 +6,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -15,10 +17,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 /**
@@ -167,7 +171,10 @@ class MeshControllerTest {
     @ParameterizedTest(name = "[{index}] X-EPB-Test-Hops: \"{0}\" terminates without calling anyone")
     @ValueSource(strings = {
             "", "abc", "four", "1.5", "0x4", "+4", "-1", "-100", "0",
-            " ", "\t", "   \t ", "4abc", "abc4", "4 5", "1,2", "\u0664", "\uFF14",
+            " ", "\t", "   \t ", "4abc", "abc4", "4 5", "\u0664", "\uFF14",
+            // Folded repeated headers whose FIRST value is junk. The comma buys
+            // the value after it nothing.
+            "abc,4", ",4", ",", "0,4",
     })
     void everyZeroCaseTerminates(String header) throws Exception {
         MvcResult result = mockMvc().perform(relay(header)).andReturn();
@@ -194,6 +201,47 @@ class MeshControllerTest {
     void firstHopsHeaderWins() throws Exception {
         MvcResult result = mockMvc()
                 .perform(relay("2").header(HopBudget.HOPS_HEADER, "40"))
+                .andReturn();
+
+        assertEquals(2, body(result).get("hops_received"));
+        assertEquals(1, downstream.onlyCall().hops());
+    }
+
+    /**
+     * A repeated header may reach the application already folded into one
+     * comma-separated value — PEP 3333 permits it and waitress, which
+     * {@code epb_test_py} runs under, does it. Reading the comma as junk would
+     * answer 0, and a 0 STOPS the chain: the run would come back with fewer
+     * hops than the driver asked for and nothing to say why.
+     */
+    static Stream<Arguments> foldedBudgets() {
+        return Stream.of(
+                arguments("4, 8", 4),       // the contract's own example
+                arguments("4,8", 4),
+                arguments("1,2", 1),
+                arguments("4,", 4),         // trailing comma: an empty second field, not a missing one
+                arguments("4 , 8", 4),      // the trim runs after the split
+                arguments("4,8,15", 4),     // only the first comma matters
+                arguments("1000000,1", 64));
+    }
+
+    @ParameterizedTest(name = "[{index}] a folded X-EPB-Test-Hops: \"{0}\" is a budget of {1}")
+    @MethodSource("foldedBudgets")
+    void aFoldedRepeatedHeaderTakesTheValueBeforeTheFirstComma(String header, int expected) throws Exception {
+        MvcResult result = mockMvc().perform(relay(header)).andReturn();
+
+        assertEquals(200, result.getResponse().getStatus());
+        assertEquals(expected, body(result).get("hops_received"));
+        assertEquals(expected - 1, body(result).get("hops_forwarded"));
+        assertEquals(expected - 1, downstream.onlyCall().hops(),
+                "a folded budget must still make its downstream call");
+    }
+
+    @Test
+    @DisplayName("element 0 is taken first, and the comma rule then applies to it")
+    void repeatedAndFoldedTogether() throws Exception {
+        MvcResult result = mockMvc()
+                .perform(relay("2, 9").header(HopBudget.HOPS_HEADER, "40"))
                 .andReturn();
 
         assertEquals(2, body(result).get("hops_received"));
@@ -315,6 +363,19 @@ class MeshControllerTest {
 
         assertEquals("  sc-265 run/1  ", downstream.onlyCall().run());
         assertEquals("  sc-265 run/1  ", body(result).get("run"));
+    }
+
+    @Test
+    @DisplayName("a run id containing a comma is NOT split; verbatim outranks the comma rule")
+    void runIsNotCommaSplit() throws Exception {
+        MvcResult result = mockMvc()
+                .perform(relay("4, 8").header(HopBudget.RUN_HEADER, "sc-265,lap-2"))
+                .andReturn();
+
+        // The budget took the value before its comma; the run id keeps both halves.
+        assertEquals(4, body(result).get("hops_received"));
+        assertEquals("sc-265,lap-2", downstream.onlyCall().run());
+        assertEquals("sc-265,lap-2", body(result).get("run"));
     }
 
     @Test

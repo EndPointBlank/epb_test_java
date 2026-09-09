@@ -68,7 +68,7 @@ public class MeshRelayService {
             LOGGER.error("Mesh relay for {} has a budget of {} but {} is not set: refusing to answer as if the "
                             + "budget were exhausted", path, hops, MeshConfig.DOWNSTREAM_URL_VARIABLE);
             Map<String, Object> body = errorBody(hops, "downstream_not_configured");
-            body.put("detail", MeshConfig.DOWNSTREAM_URL_VARIABLE + " is not set, so this application cannot "
+            body.put("message", MeshConfig.DOWNSTREAM_URL_VARIABLE + " is not set, so this application cannot "
                     + "make the downstream call its hop budget of " + hops + " requires");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
         }

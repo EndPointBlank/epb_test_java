@@ -262,8 +262,11 @@ class MeshControllerTest {
         assertEquals("epb_test_java", body.get("app"));
         assertEquals(3, body.get("hops_received"));
         assertEquals("downstream_not_configured", body.get("error"));
-        assertTrue(String.valueOf(body.get("detail")).contains("EPB_MESH_DOWNSTREAM_URL"),
-                "the error must name the missing configuration, got: " + body.get("detail"));
+        assertTrue(String.valueOf(body.get("message")).contains("EPB_MESH_DOWNSTREAM_URL"),
+                "the error must name the missing configuration, got: " + body.get("message"));
+        assertNull(body.get("detail"),
+                "the contract names this key `message`; `detail` was this implementation's "
+                        + "own divergence, and four of five never emitted it");
         assertNull(body.get("terminated"), "a misconfiguration is not a termination");
     }
 

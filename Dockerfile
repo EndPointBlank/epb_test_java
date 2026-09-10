@@ -17,14 +17,24 @@ COPY mvnw pom.xml ./
 # way build.sh does, before resolving the rest of the dependency tree, so a
 # source-only edit later doesn't invalidate this layer.
 COPY lib/ lib/
-ARG SDK_VERSION=0.6.0
-RUN ./mvnw install:install-file \
+# The version is read from pom.xml, not repeated here. pom.xml, build.sh and
+# this file each used to carry their own copy of the string with nothing
+# keeping them in sync, so a pom bump could leave two of the three behind and
+# the image would install a jar the build no longer resolves.
+RUN set -eu; \
+    SDK_VERSION="$(awk '/<artifactId>end-point-blank-java<\/artifactId>/ { found = 1; next } \
+                        found && /<version>/ { gsub(/.*<version>|<\/version>.*/, ""); print; exit }' pom.xml)"; \
+    if [ -z "$SDK_VERSION" ]; then \
+      echo "Dockerfile: could not read the end-point-blank-java version from pom.xml" >&2; \
+      exit 1; \
+    fi; \
+    ./mvnw install:install-file \
       -Dfile="lib/com/endpointblank/end-point-blank-java/${SDK_VERSION}/end-point-blank-java-${SDK_VERSION}.jar" \
       -DgroupId=com.endpointblank \
       -DartifactId=end-point-blank-java \
       -Dversion="${SDK_VERSION}" \
       -Dpackaging=jar \
-      -q && \
+      -q; \
     ./mvnw dependency:go-offline -q
 
 COPY src/ src/

@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -94,6 +95,12 @@ class AuthenticateRefusalStatusTest {
         @GetMapping
         ResponseEntity<Map<String, Object>> index() {
             return ResponseEntity.ok(Map.of("ok", true));
+        }
+
+        /** Mirrors {@code WhoAmIController#show}, so the two guards are asked about one shape. */
+        @GetMapping("/{id}")
+        ResponseEntity<Map<String, Object>> show(@PathVariable String id) {
+            return ResponseEntity.ok(Map.of("ok", true, "id", id));
         }
     }
 
@@ -195,14 +202,47 @@ class AuthenticateRefusalStatusTest {
     void reportsItsOwnPath() throws Exception {
         call("/whoami");
 
-        // AuthenticatedInterceptor builds the path from request.getRequestURI() —
-        // the concrete URI — while AuthorizedInterceptor uses the route pattern
-        // via RoutePatternFinder. For a variable-free path the two agree, which
-        // is exactly why this route has no path variables. This asserts the
-        // property that choice buys; it is not a claim that the interceptor
-        // would resolve a /whoami/{id} correctly. It would not.
         assertTrue(lastRequestBody.get().contains("\"path\":\"/whoami\""),
                 "intake was told: " + lastRequestBody.get());
+    }
+
+    @Test
+    @DisplayName("the path intake is told about for /whoami/7 is the pattern, not the URI")
+    void reportsThePatternNotTheUri() throws Exception {
+        call("/whoami/7");
+
+        // The test the variable-free route could not carry. AuthenticatedInterceptor
+        // built the path from request.getRequestURI() — the concrete URI —
+        // while AuthorizedInterceptor used the route pattern via
+        // RoutePatternFinder. On a path with no variables the two agree, which
+        // is why this controller had none and why the assertion above passed
+        // against an interceptor that was wrong. Intake matches what
+        // registration told it, and registration reports the pattern, so
+        // /whoami/7 names an endpoint intake has never heard of and every
+        // request through this route would have been refused.
+        assertTrue(lastRequestBody.get().contains("\"path\":\"/whoami/:id\""),
+                "intake must be told the registered pattern, not the concrete URI; "
+                        + "intake was told: " + lastRequestBody.get());
+    }
+
+    @Test
+    @DisplayName("both guards name a parameterised route the way it was registered")
+    void guardsAgreeOnPath() throws Exception {
+        // The path half of the refusal parity below. The status divergence was
+        // caught by asking both guards about one refusal; this asks both about
+        // one route shape. Neither call fails — intake answers 201 for both —
+        // which is exactly what made the path bug survivable: nothing in the
+        // application could see it, only intake could.
+        call("/whoami/7");
+        String viaAuthenticate = lastRequestBody.get();
+
+        call("/parity-probe/7");
+        String viaAuthorize = lastRequestBody.get();
+
+        assertTrue(viaAuthenticate.contains("\"path\":\"/whoami/:id\""),
+                "authenticate named it: " + viaAuthenticate);
+        assertTrue(viaAuthorize.contains("\"path\":\"/parity-probe/:id\""),
+                "authorize named it: " + viaAuthorize);
     }
 
     // ----------------------------------------------------------------------

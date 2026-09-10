@@ -50,6 +50,7 @@ if [ -z "$LIB_VERSION" ]; then
     exit 1
 fi
 LIB_JAR_DEST="lib/com/endpointblank/end-point-blank-java/${LIB_VERSION}/end-point-blank-java-${LIB_VERSION}.jar"
+LIB_POM_DEST="${LIB_JAR_DEST%.jar}.pom"
 
 # Local dev only: if the end_point_blank_java source repo is checked out next
 # to this one, rebuild the jar and refresh the vendored copy. CI/Render won't
@@ -85,6 +86,14 @@ if [ -d "$LIB_SRC" ]; then
 
     mkdir -p "$(dirname "$LIB_JAR_DEST")"
     cp "$LIB_SRC/target/end-point-blank-java-${LIB_VERSION}.jar" "$LIB_JAR_DEST"
+    # The descriptor, not just the jar. lib/ is a Maven repository layout, and a
+    # repository entry without a .pom has no dependency list -- Maven resolves
+    # the jar and silently gives it none, so the SDK's Jackson and Spring
+    # dependencies would have to be provided by accident from this app's own
+    # tree. This step used to be absent: the .pom was placed by hand once, so
+    # the first version bump vendored a jar next to nothing and left the old
+    # descriptor behind under the old version's directory.
+    cp "$LIB_SRC/pom.xml" "$LIB_POM_DEST"
 fi
 
 if [ ! -f "$LIB_JAR_DEST" ]; then
@@ -94,13 +103,17 @@ if [ ! -f "$LIB_JAR_DEST" ]; then
     exit 1
 fi
 
+if [ ! -f "$LIB_POM_DEST" ]; then
+    echo "build.sh: vendored jar at $LIB_JAR_DEST has no .pom beside it." >&2
+    echo "  lib/ is a Maven repository; without $LIB_POM_DEST the SDK resolves" >&2
+    echo "  with an empty dependency list. Copy the SDK's pom.xml there." >&2
+    exit 1
+fi
+
 # Install the vendored JAR into the local Maven repo so it overrides any cached version.
 ./mvnw install:install-file \
   -Dfile="$LIB_JAR_DEST" \
-  -DgroupId=com.endpointblank \
-  -DartifactId=end-point-blank-java \
-  -Dversion="${LIB_VERSION}" \
-  -Dpackaging=jar \
+  -DpomFile="$LIB_POM_DEST" \
   -q
 
 ./mvnw clean package -DskipTests

@@ -2,6 +2,7 @@ package com.ejbtestjava.mesh;
 
 import com.ejbtestjava.controller.MeshController;
 import com.ejbtestjava.controller.GlobalExceptionHandler;
+import com.ejbtestjava.support.IntakeGrant;
 import com.endpointblank.Configuration;
 import com.endpointblank.spring.Authorized;
 import com.endpointblank.spring.AuthorizedInterceptor;
@@ -22,6 +23,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
@@ -46,9 +48,10 @@ class MeshAuthorizationTest {
 
     private static HttpServer intake;
     private static final AtomicInteger authorizeStatus = new AtomicInteger(201);
-    private static final AtomicReference<String> authorizeBody = new AtomicReference<>("{}");
+    private static final AtomicReference<String> authorizeBody = new AtomicReference<>(IntakeGrant.BODY);
     private static final AtomicInteger authorizeCalls = new AtomicInteger();
 
+    private static String stubBaseUrl;
     private static String originalBaseUrl;
     private static String originalAppName;
 
@@ -73,7 +76,8 @@ class MeshAuthorizationTest {
         Configuration config = Configuration.getInstance();
         originalBaseUrl = config.getBaseUrl();
         originalAppName = config.getAppName();
-        config.setBaseUrl("http://127.0.0.1:" + intake.getAddress().getPort());
+        stubBaseUrl = "http://127.0.0.1:" + intake.getAddress().getPort();
+        config.setBaseUrl(stubBaseUrl);
         config.setClientId("test-client");
         config.setClientSecret("test-secret");
         config.setAppName("epb-test-java");
@@ -102,7 +106,7 @@ class MeshAuthorizationTest {
     @AfterEach
     void resetStub() {
         authorizeStatus.set(201);
-        authorizeBody.set("{}");
+        authorizeBody.set(IntakeGrant.BODY);
     }
 
     /**
@@ -117,6 +121,15 @@ class MeshAuthorizationTest {
                         .header("Authorization", "Basic " + UUID.randomUUID())
                         .header(HopBudget.HOPS_HEADER, hops))
                 .andReturn();
+    }
+
+    @Test
+    @DisplayName("the stub's granted answer is intake's, with the caller's environment under data")
+    void stubGrantsInIntakesShape() throws Exception {
+        HttpResponse<String> granted = IntakeGrant.askToAuthorize(stubBaseUrl);
+
+        assertEquals(201, granted.statusCode());
+        IntakeGrant.assertIsIntakesGrant(granted.body());
     }
 
     @ParameterizedTest(name = "[{index}] {0} is refused when authorization refuses")

@@ -47,6 +47,17 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  */
 public final class IntakeGrant {
 
+    /**
+     * The granted body the stubs answer by default. Field names copied from
+     * intake; the values are stand-ins.
+     */
+    public static final String BODY = """
+            {"authorized":true,"data":[{\
+            "id":"stub-intake-access",\
+            "source_application_environment_id":"stub-intake-source-app-env",\
+            "target_application_environment_id":"stub-intake-target-app-env",\
+            "inserted_at":"2026-01-01T00:00:00Z"}]}""";
+
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private IntakeGrant() {}

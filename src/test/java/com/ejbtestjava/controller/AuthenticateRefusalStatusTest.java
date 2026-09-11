@@ -74,7 +74,7 @@ class AuthenticateRefusalStatusTest {
 
     private static HttpServer intake;
     private static final AtomicInteger authorizeStatus = new AtomicInteger(201);
-    private static final AtomicReference<String> authorizeBody = new AtomicReference<>("{}");
+    private static final AtomicReference<String> authorizeBody = new AtomicReference<>(IntakeGrant.BODY);
     private static final AtomicReference<String> lastRequestBody = new AtomicReference<>("");
     private static final AtomicInteger authorizeCalls = new AtomicInteger();
 
@@ -154,7 +154,7 @@ class AuthenticateRefusalStatusTest {
     @AfterEach
     void resetStub() {
         authorizeStatus.set(201);
-        authorizeBody.set("{}");
+        authorizeBody.set(IntakeGrant.BODY);
         Configuration.getInstance().setBaseUrl(stubBaseUrl);
     }
 

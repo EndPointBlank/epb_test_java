@@ -48,7 +48,7 @@ class MeshAuthorizationTest {
 
     private static HttpServer intake;
     private static final AtomicInteger authorizeStatus = new AtomicInteger(201);
-    private static final AtomicReference<String> authorizeBody = new AtomicReference<>("{}");
+    private static final AtomicReference<String> authorizeBody = new AtomicReference<>(IntakeGrant.BODY);
     private static final AtomicInteger authorizeCalls = new AtomicInteger();
 
     private static String stubBaseUrl;
@@ -106,7 +106,7 @@ class MeshAuthorizationTest {
     @AfterEach
     void resetStub() {
         authorizeStatus.set(201);
-        authorizeBody.set("{}");
+        authorizeBody.set(IntakeGrant.BODY);
     }
 
     /**

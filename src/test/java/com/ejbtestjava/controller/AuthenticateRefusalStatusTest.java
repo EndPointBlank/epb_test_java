@@ -1,5 +1,6 @@
 package com.ejbtestjava.controller;
 
+import com.ejbtestjava.support.IntakeGrant;
 import com.endpointblank.Configuration;
 import com.endpointblank.spring.Authenticated;
 import com.endpointblank.spring.AuthenticatedInterceptor;
@@ -28,6 +29,7 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
@@ -173,6 +175,19 @@ class AuthenticateRefusalStatusTest {
             port = probe.getLocalPort();
         }
         Configuration.getInstance().setBaseUrl("http://127.0.0.1:" + port);
+    }
+
+    // ----------------------------------------------------------------------
+    // The stub grants the way intake does
+    // ----------------------------------------------------------------------
+
+    @Test
+    @DisplayName("the stub's granted answer is intake's, with the caller's environment under data")
+    void stubGrantsInIntakesShape() throws Exception {
+        HttpResponse<String> granted = IntakeGrant.askToAuthorize(stubBaseUrl);
+
+        assertEquals(201, granted.statusCode());
+        IntakeGrant.assertIsIntakesGrant(granted.body());
     }
 
     // ----------------------------------------------------------------------

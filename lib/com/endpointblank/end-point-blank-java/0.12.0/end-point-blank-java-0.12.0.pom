@@ -6,11 +6,11 @@
 
     <groupId>com.endpointblank</groupId>
     <artifactId>end-point-blank-java</artifactId>
-    <version>0.10.0</version>
+    <version>0.12.0</version>
     <packaging>jar</packaging>
 
     <name>EndPointBlank Java</name>
-    <description>Java library for EndPointBlank API integration - endpoint tracking, authorization, and error reporting</description>
+    <description>Java SDK for EndPointBlank (Spring, Spring Boot, Jakarta Servlet): authorize service-to-service API calls, report endpoint versions, and see which clients still call deprecated API versions.</description>
 
     <licenses>
         <license>
@@ -20,7 +20,7 @@
         </license>
     </licenses>
 
-    <url>https://github.com/EndPointBlank/end_point_blank_java</url>
+    <url>https://endpointblank.com</url>
 
     <scm>
         <connection>scm:git:https://github.com/EndPointBlank/end_point_blank_java.git</connection>
@@ -108,6 +108,24 @@
     </dependencies>
 
     <build>
+        <!-- Only sdk.properties is filtered: it carries ${project.version} for the
+             x-epb-sdk header (sc-1463). Everything else is copied as-is. -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>com/endpointblank/sdk.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>com/endpointblank/sdk.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -122,6 +140,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.1.2</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <!-- What HttpClientTest expects x-epb-sdk to carry. -->
+                        <endpointblank.projectVersion>${project.version}</endpointblank.projectVersion>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
         </plugins>
     </build>
